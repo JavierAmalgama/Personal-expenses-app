@@ -1,5 +1,6 @@
 class User < ApplicationRecord
     has_many :tokens, class_name: "UsersToken"
+    has_many :movements, dependent: :destroy
     
     validates :name, 
         presence: true

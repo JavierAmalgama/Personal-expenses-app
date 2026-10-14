@@ -27,6 +27,79 @@
           }
         }
       },
+      "movement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "example": "1500.50"
+          },
+          "currency": {
+            "type": "string",
+            "example": "ARS"
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "subcategory": {
+            "type": "string",
+            "nullable": true
+          },
+          "payment_method": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "cash",
+              "debit_card",
+              "credit_card",
+              "transfer",
+              "other",
+              null
+            ]
+          },
+          "credit_card": {
+            "type": "string",
+            "nullable": true,
+            "description": "Required when payment_method is credit_card, null otherwise",
+            "enum": [
+              "visa",
+              "amex",
+              "mercado_pago",
+              "other",
+              null
+            ]
+          },
+          "beneficiary": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "shared": {
+            "type": "boolean"
+          }
+        }
+      },
       "invalid_record_error": {
         "type": "object",
         "properties": {
@@ -71,6 +144,412 @@
     }
   },
   "paths": {
+    "/movements": {
+      "get": {
+        "summary": "Get movements",
+        "security": [
+          {
+            "token_header": [
+
+            ]
+          }
+        ],
+        "description": "Returns the logged user's movements, newest first. Filters can be combined.",
+        "tags": [
+          "Movements"
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "2026-10"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "income",
+                "expense"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/movement"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid filter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/invalid_argument_error"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create movement",
+        "security": [
+          {
+            "token_header": [
+
+            ]
+          }
+        ],
+        "description": "Creates a movement for the logged user",
+        "tags": [
+          "Movements"
+        ],
+        "parameters": [
+
+        ],
+        "responses": {
+          "200": {
+            "description": "Movement created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/movement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid movement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/invalid_record_error"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "income",
+                      "expense"
+                    ]
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "subcategory": {
+                    "type": "string"
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "enum": [
+                      "cash",
+                      "debit_card",
+                      "credit_card",
+                      "transfer",
+                      "other"
+                    ]
+                  },
+                  "credit_card": {
+                    "type": "string",
+                    "enum": [
+                      "visa",
+                      "amex",
+                      "mercado_pago",
+                      "other"
+                    ]
+                  },
+                  "beneficiary": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "shared": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "date",
+                  "description",
+                  "amount"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "schema": {
+            "type": "integer"
+          },
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Get specific movement",
+        "security": [
+          {
+            "token_header": [
+
+            ]
+          }
+        ],
+        "description": "Returns a movement of the logged user",
+        "tags": [
+          "Movements"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/movement"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Movement not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update movement",
+        "security": [
+          {
+            "token_header": [
+
+            ]
+          }
+        ],
+        "description": "Updates a movement of the logged user",
+        "tags": [
+          "Movements"
+        ],
+        "parameters": [
+
+        ],
+        "responses": {
+          "200": {
+            "description": "Movement updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/movement"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid movement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/invalid_record_error"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Movement not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "income",
+                      "expense"
+                    ]
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "subcategory": {
+                    "type": "string"
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "enum": [
+                      "cash",
+                      "debit_card",
+                      "credit_card",
+                      "transfer",
+                      "other"
+                    ]
+                  },
+                  "credit_card": {
+                    "type": "string",
+                    "enum": [
+                      "visa",
+                      "amex",
+                      "mercado_pago",
+                      "other"
+                    ]
+                  },
+                  "beneficiary": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "shared": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete movement",
+        "security": [
+          {
+            "token_header": [
+
+            ]
+          }
+        ],
+        "description": "Deletes a movement of the logged user",
+        "tags": [
+          "Movements"
+        ],
+        "responses": {
+          "200": {
+            "description": "Movement deleted"
+          },
+          "404": {
+            "description": "Movement not found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/users": {
       "get": {
         "summary": "Get all users",
