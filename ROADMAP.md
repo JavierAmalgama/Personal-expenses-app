@@ -36,6 +36,8 @@ definition, endpoints y specs (modelo, serializer y request).
 - **US20** Movimientos recurrentes (alquiler, suscripciones) generados por un job.
 - **US21** Importar movimientos desde CSV del banco, detectando duplicados.
 - **US22** Multi-moneda: tipo de cambio por movimiento y reportes en la moneda principal.
+  Nunca sumar monedas distintas: un movimiento en USD sobre una cuenta en ARS responde `422`
+  con `code: "currency_mismatch"`, y los totales sin tipo de cambio se devuelven agrupados por moneda.
 - **US23** Etiquetas (`Tag`) muchos-a-muchos con movimientos.
 - **US24** Adjuntar comprobantes (Active Storage).
 - **US25** Exportar a CSV.

@@ -13,20 +13,6 @@
   ],
   "components": {
     "schemas": {
-      "invalid_argument_error": {
-        "type": "object",
-        "properties": {
-          "error_name": {
-            "type": "string",
-            "enum": [
-              "invalid_argument"
-            ]
-          },
-          "error_message": {
-            "type": "string"
-          }
-        }
-      },
       "movement": {
         "type": "object",
         "properties": {
@@ -100,25 +86,24 @@
           }
         }
       },
-      "invalid_record_error": {
+      "error": {
         "type": "object",
         "properties": {
-          "error_name": {
-            "type": "string",
-            "enum": [
-              "invalid_record"
-            ]
+          "code": {
+            "type": "string"
           },
-          "error_message": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
           }
-        }
+        },
+        "required": [
+          "code",
+          "message",
+          "details"
+        ]
       },
       "user": {
         "type": "object",
@@ -210,22 +195,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/invalid_argument_error"
+                    "error": {
+                      "$ref": "#/components/schemas/error"
                     }
                   },
                   "required": [
-                    "data"
+                    "error"
                   ]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -246,7 +243,7 @@
 
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "Movement created",
             "content": {
               "application/json": {
@@ -263,22 +260,34 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/invalid_record_error"
+                    "error": {
+                      "$ref": "#/components/schemas/error"
                     }
                   },
                   "required": [
-                    "data"
+                    "error"
                   ]
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -305,7 +314,11 @@
                     "type": "number"
                   },
                   "currency": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "ARS",
+                      "USD"
+                    ]
                   },
                   "category": {
                     "type": "string"
@@ -390,13 +403,40 @@
             }
           },
           "404": {
-            "description": "Movement not found"
+            "description": "Movement not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -434,25 +474,52 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": {
-                      "$ref": "#/components/schemas/invalid_record_error"
+                    "error": {
+                      "$ref": "#/components/schemas/error"
                     }
                   },
                   "required": [
-                    "data"
+                    "error"
                   ]
                 }
               }
             }
           },
           "404": {
-            "description": "Movement not found"
+            "description": "Movement not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -479,7 +546,11 @@
                     "type": "number"
                   },
                   "currency": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "ARS",
+                      "USD"
+                    ]
                   },
                   "category": {
                     "type": "string"
@@ -535,17 +606,44 @@
           "Movements"
         ],
         "responses": {
-          "200": {
+          "204": {
             "description": "Movement deleted"
           },
           "404": {
-            "description": "Movement not found"
+            "description": "Movement not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       }
@@ -579,10 +677,22 @@
             }
           },
           "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       },
@@ -603,7 +713,7 @@
 
         ],
         "responses": {
-          "200": {
+          "201": {
             "description": "User created",
             "content": {
               "application/json": {
@@ -613,11 +723,41 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized"
+          "422": {
+            "description": "Invalid user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           },
-          "403": {
-            "description": "Forbidden"
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         },
         "requestBody": {
@@ -678,11 +818,41 @@
               }
             }
           },
-          "401": {
-            "description": "Unauthorized"
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           },
-          "403": {
-            "description": "Forbidden"
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
           }
         }
       }

@@ -6,7 +6,7 @@ RSpec.describe MovementsController, type: :request do
         date: { type: :string, format: :date },
         description: { type: :string },
         amount: { type: :number },
-        currency: { type: :string },
+        currency: { type: :string, enum: Movement::SUPPORTED_CURRENCIES },
         category: { type: :string },
         subcategory: { type: :string },
         payment_method: { type: :string, enum: Movement.payment_methods.keys },
@@ -87,23 +87,23 @@ RSpec.describe MovementsController, type: :request do
 
             response 422, "Invalid filter" do
                 include_context "with valid token"
-                schema invalid_argument_schema
+                schema error_response_schema
 
                 context "when month has an invalid format" do
                     let(:month) { "octubre" }
 
-                    it "responds with invalid argument" do
+                    it "responds with invalid parameter" do
                         send_request
-                        expect_error_response("invalid_argument", "invalid date")
+                        expect_error_response("invalid_parameter", "month must have the format YYYY-MM", { month: "octubre" })
                     end
                 end
 
                 context "when kind is invalid" do
                     let(:kind) { "transfer" }
 
-                    it "responds with invalid argument" do
+                    it "responds with invalid parameter" do
                         send_request
-                        expect_error_response("invalid_argument", "kind must be one of: income, expense")
+                        expect_error_response("invalid_parameter", "kind must be one of: income, expense", { kind: "transfer" })
                     end
                 end
             end
@@ -137,7 +137,7 @@ RSpec.describe MovementsController, type: :request do
                 shared: true
             } }
 
-            response 200, "Movement created" do
+            response 201, "Movement created" do
                 include_context "with valid token"
                 schema raw_object_schema(:movement)
 
@@ -170,14 +170,46 @@ RSpec.describe MovementsController, type: :request do
 
             response 422, "Invalid movement" do
                 include_context "with valid token"
-                schema invalid_record_schema
+                schema error_response_schema
 
-                let(:movement_params) { { kind: "gift", amount: -10 } }
+                context "with several invalid fields" do
+                    let(:movement_params) { { kind: "gift", amount: -10 } }
 
-                it "doesn't create the movement" do
-                    expect { send_request }.not_to change(Movement, :count)
-                    expect(JSON.parse(response.body).dig("response", "error_message").keys)
-                        .to include("kind", "date", "description", "amount")
+                    it "doesn't create the movement" do
+                        expect { send_request }.not_to change(Movement, :count)
+                        expect(response_error["code"]).to eq "validation_failed"
+                        expect(response_error["details"].keys).to include("kind", "date", "description", "amount")
+                    end
+                end
+
+                context "with a negative amount" do
+                    let(:movement_params) { super().merge(amount: -5) }
+
+                    it "responds with the amount error" do
+                        send_request
+                        expect_error_response("validation_failed", "Validation failed: Amount must be greater than 0",
+                            { amount: [ "must be greater than 0" ] })
+                    end
+                end
+
+                context "without description" do
+                    let(:movement_params) { super().except(:description) }
+
+                    it "responds with the description error" do
+                        send_request
+                        expect_error_response("validation_failed", "Validation failed: Description can't be blank",
+                            { description: [ "can't be blank" ] })
+                    end
+                end
+
+                context "with an unsupported currency" do
+                    let(:movement_params) { super().merge(currency: "EUR") }
+
+                    it "responds with the currency error" do
+                        send_request
+                        expect_error_response("validation_failed", "Validation failed: Currency must be one of: ARS, USD",
+                            { currency: [ "must be one of: ARS, USD" ] })
+                    end
                 end
             end
 
@@ -200,13 +232,14 @@ RSpec.describe MovementsController, type: :request do
         shared_examples "not found movement" do
             response 404, "Movement not found" do
                 include_context "as the movement owner"
+                schema error_response_schema
 
                 context "when it belongs to another user" do
                     let(:movement) { create :movement }
 
                     it "responds not found" do
                         send_request
-                        expect_error_response("record_not_found", "Movement not found")
+                        expect_error_response("not_found", "Movement not found")
                     end
                 end
 
@@ -215,7 +248,7 @@ RSpec.describe MovementsController, type: :request do
 
                     it "responds not found" do
                         send_request
-                        expect_error_response("record_not_found", "Movement not found")
+                        expect_error_response("not_found", "Movement not found")
                     end
                 end
             end
@@ -274,7 +307,7 @@ RSpec.describe MovementsController, type: :request do
 
             response 422, "Invalid movement" do
                 include_context "as the movement owner"
-                schema invalid_record_schema
+                schema error_response_schema
 
                 let(:movement_params) { { amount: 0 } }
 
@@ -293,13 +326,13 @@ RSpec.describe MovementsController, type: :request do
             description "Deletes a movement of the logged user"
             tags "Movements"
 
-            response 200, "Movement deleted" do
+            response 204, "Movement deleted" do
                 include_context "as the movement owner"
 
                 it "deletes the movement" do
                     send_request
                     expect(Movement.exists?(movement.id)).to eq false
-                    expect_response(response: { status: "successful" })
+                    expect_no_content_response
                 end
             end
 

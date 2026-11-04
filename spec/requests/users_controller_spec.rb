@@ -40,7 +40,7 @@ RSpec.describe UsersController, type: :request do
                 email: email
             } }
 
-            response 200, "User created" do
+            response 201, "User created" do
                 include_context "with valid token"
                 schema raw_object_schema(:user)
 
@@ -54,6 +54,21 @@ RSpec.describe UsersController, type: :request do
                 it "assigns attributes correctly" do
                     send_request
                     expect(created_user).to have_attributes(name: name, email: email)
+                end
+            end
+
+            response 422, "Invalid user" do
+                include_context "with valid token"
+                schema error_response_schema
+
+                let(:email) { "not-an-email" }
+
+                before { token }
+
+                it "doesn't create the user" do
+                    expect { send_request }.not_to change(User, :count)
+                    expect(response_error["code"]).to eq "validation_failed"
+                    expect(response_error["details"].keys).to eq [ "email" ]
                 end
             end
 
@@ -78,6 +93,18 @@ RSpec.describe UsersController, type: :request do
                 it "responds with required user" do
                     send_request
                     expect_object_response(required_user)
+                end
+            end
+
+            response 404, "User not found" do
+                include_context "with valid token"
+                schema error_response_schema
+
+                let(:id) { token; invalid_id_for(User) }
+
+                it "responds not found" do
+                    send_request
+                    expect_error_response("not_found", "User not found")
                 end
             end
 

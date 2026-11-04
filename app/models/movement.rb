@@ -1,4 +1,6 @@
 class Movement < ApplicationRecord
+    SUPPORTED_CURRENCIES = %w[ARS USD].freeze
+
     belongs_to :user
 
     enum :kind, { income: "income", expense: "expense" }, validate: true
@@ -25,7 +27,7 @@ class Movement < ApplicationRecord
         numericality: { greater_than: 0 }
     validates :currency,
         presence: true,
-        format: { with: /\A[A-Z]{3}\z/, message: "must be a 3-letter ISO code like 'ARS'" }
+        inclusion: { in: SUPPORTED_CURRENCIES, message: "must be one of: #{SUPPORTED_CURRENCIES.join(', ')}" }
 
     scope :in_month, ->(date) { where(date: date.beginning_of_month..date.end_of_month) }
     scope :with_category, ->(category) { where(category: category) }
