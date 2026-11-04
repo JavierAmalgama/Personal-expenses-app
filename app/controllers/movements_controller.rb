@@ -28,9 +28,9 @@ class MovementsController < ApplicationController
     end
 
     def filtered_movements
-        movements = @logged_user.movements.order(date: :desc, id: :desc)
+        movements = @logged_user.movements.includes(category: :parent).order(date: :desc, id: :desc)
         movements = movements.in_month(parsed_month) if params[:month].present?
-        movements = movements.with_category(params[:category]) if params[:category].present?
+        movements = movements.with_category(params[:category_id]) if params[:category_id].present?
         movements = movements.of_kind(validated_kind) if params[:kind].present?
         movements
     end
@@ -49,7 +49,7 @@ class MovementsController < ApplicationController
     end
 
     def movement_params
-        params.permit(:kind, :date, :description, :amount, :currency, :category,
-            :subcategory, :payment_method, :credit_card, :beneficiary, :notes, :shared)
+        params.permit(:kind, :date, :description, :amount, :currency, :category_id,
+            :event_id, :payment_method, :credit_card, :beneficiary, :notes, :shared)
     end
 end

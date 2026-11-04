@@ -6,11 +6,14 @@ FactoryBot.define do
         sequence(:description) { |n| "movement #{n}" }
         amount { 1500.50 }
         currency { "ARS" }
-        category { "Supermercado" }
+        category { association :category, user: user, kind: kind }
 
         trait :income do
             kind { "income" }
-            category { "Sueldo" }
+        end
+
+        trait :without_category do
+            category { nil }
         end
     end
 end
