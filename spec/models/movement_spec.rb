@@ -2,6 +2,8 @@ require "rails_helper"
 
 RSpec.describe Movement, type: :model do
     it { is_expected.to belong_to(:user) }
+    it { is_expected.to belong_to(:category).optional }
+    it { is_expected.to belong_to(:event).optional }
     it { is_expected.to validate_presence_of(:date) }
     it { is_expected.to validate_presence_of(:description) }
     it { is_expected.to validate_presence_of(:amount) }
@@ -14,8 +16,10 @@ RSpec.describe Movement, type: :model do
         it { is_expected.to have_db_column(:description).of_type(:string).with_options(null: false) }
         it { is_expected.to have_db_column(:amount).of_type(:decimal).with_options(null: false, precision: 12, scale: 2) }
         it { is_expected.to have_db_column(:currency).of_type(:string).with_options(null: false, default: "ARS") }
-        it { is_expected.to have_db_column(:category).of_type(:string) }
-        it { is_expected.to have_db_column(:subcategory).of_type(:string) }
+        it { is_expected.to have_db_column(:category_id).of_type(:integer) }
+        it { is_expected.to have_db_column(:event_id).of_type(:integer) }
+        it { is_expected.not_to have_db_column(:category) }
+        it { is_expected.not_to have_db_column(:subcategory) }
         it { is_expected.to have_db_column(:payment_method).of_type(:string) }
         it { is_expected.to have_db_column(:credit_card).of_type(:string) }
         it { is_expected.to have_db_column(:beneficiary).of_type(:string) }
@@ -66,9 +70,27 @@ RSpec.describe Movement, type: :model do
         end
     end
 
+    describe "category" do
+        let(:user) { create :user }
+
+        it { expect(build :movement, :without_category).to be_valid }
+        it { expect(build :movement, user: user, category: create(:category, user: user)).to be_valid }
+        it { expect(build :movement, user: user, category: create(:category)).to be_invalid }
+        it { expect(build :movement, user: user, category: create(:category, user: user, kind: "income")).to be_invalid }
+    end
+
+    describe "event" do
+        let(:user) { create :user }
+
+        it { expect(build :movement, user: user, event: create(:event, user: user)).to be_valid }
+        it { expect(build :movement, user: user, event: create(:event)).to be_invalid }
+    end
+
     describe "scopes" do
         let(:user) { create :user }
-        let!(:october_expense) { create :movement, user: user, date: Date.new(2026, 10, 31), category: "Alquiler" }
+        let(:housing) { create :category, user: user, name: "Vivienda" }
+        let(:rent) { create :category, user: user, name: "Alquiler", parent: housing }
+        let!(:october_expense) { create :movement, user: user, date: Date.new(2026, 10, 31), category: rent }
         let!(:october_income) { create :movement, :income, user: user, date: Date.new(2026, 10, 1) }
         let!(:september_expense) { create :movement, user: user, date: Date.new(2026, 9, 30) }
 
@@ -77,7 +99,12 @@ RSpec.describe Movement, type: :model do
         end
 
         it "filters by category" do
-            expect(Movement.with_category("Alquiler")).to contain_exactly(october_expense)
+            expect(Movement.with_category(rent.id)).to contain_exactly(october_expense)
+        end
+
+        it "includes the subcategories when filtering by a root category" do
+            housing_expense = create :movement, user: user, category: housing
+            expect(Movement.with_category(housing.id)).to contain_exactly(october_expense, housing_expense)
         end
 
         it "filters by kind" do

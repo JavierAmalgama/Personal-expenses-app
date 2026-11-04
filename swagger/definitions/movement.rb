@@ -10,8 +10,10 @@ module Swagger
 				description: { type: :string },
 				amount: { type: :string, example: "1500.50" },
 				currency: { type: :string, example: "ARS" },
-				category: { type: :string, nullable: true },
-				subcategory: { type: :string, nullable: true },
+				category_id: { type: :integer, nullable: true },
+				category: { type: :string, nullable: true, description: "Name of the root category (read only)" },
+				subcategory: { type: :string, nullable: true, description: "Name of the subcategory, if any (read only)" },
+				event_id: { type: :integer, nullable: true },
 				payment_method: {
 					type: :string,
 					nullable: true,

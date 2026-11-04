@@ -7,8 +7,8 @@ RSpec.describe MovementsController, type: :request do
         description: { type: :string },
         amount: { type: :number },
         currency: { type: :string, enum: Movement::SUPPORTED_CURRENCIES },
-        category: { type: :string },
-        subcategory: { type: :string },
+        category_id: { type: :integer },
+        event_id: { type: :integer },
         payment_method: { type: :string, enum: Movement.payment_methods.keys },
         credit_card: { type: :string, enum: Movement.credit_cards.keys },
         beneficiary: { type: :string },
@@ -23,11 +23,12 @@ RSpec.describe MovementsController, type: :request do
             tags "Movements"
 
             parameter name: :month, in: :query, required: false, schema: { type: :string, example: "2026-10" }
-            parameter name: :category, in: :query, required: false, schema: { type: :string }
+            parameter name: :category_id, in: :query, required: false, schema: { type: :integer },
+                description: "Includes the movements of its subcategories"
             parameter name: :kind, in: :query, required: false, schema: { type: :string, enum: Movement.kinds.keys }
 
             let(:month) { nil }
-            let(:category) { nil }
+            let(:category_id) { nil }
             let(:kind) { nil }
 
             response 200, "Success" do
@@ -35,7 +36,9 @@ RSpec.describe MovementsController, type: :request do
                 schema raw_collection_schema(:movement)
 
                 let(:user) { token.user }
-                let!(:october_rent) { create :movement, user: user, date: Date.new(2026, 10, 5), category: "Alquiler" }
+                let(:housing) { create :category, user: user, name: "Vivienda" }
+                let(:rent) { create :category, user: user, name: "Alquiler", parent: housing }
+                let!(:october_rent) { create :movement, user: user, date: Date.new(2026, 10, 5), category: rent }
                 let!(:october_salary) { create :movement, :income, user: user, date: Date.new(2026, 10, 1) }
                 let!(:september_groceries) { create :movement, user: user, date: Date.new(2026, 9, 20) }
                 let!(:other_user_movement) { create :movement, date: Date.new(2026, 10, 5) }
@@ -57,9 +60,18 @@ RSpec.describe MovementsController, type: :request do
                 end
 
                 context "filtering by category" do
-                    let(:category) { "Alquiler" }
+                    let(:category_id) { rent.id }
 
                     it "responds with the movements of that category" do
+                        send_request
+                        expect_collection_response([ october_rent ])
+                    end
+                end
+
+                context "filtering by a root category" do
+                    let(:category_id) { housing.id }
+
+                    it "responds with the movements of the category and its subcategories" do
                         send_request
                         expect_collection_response([ october_rent ])
                     end
@@ -122,14 +134,17 @@ RSpec.describe MovementsController, type: :request do
                 required: %i[kind date description amount]
             }
 
+            let(:user) { create :user }
+            let(:groceries) { create :category, :subcategory, user: user, name: "Almacén" }
+            let(:trip) { create :event, user: user }
             let(:movement_params) { {
                 kind: "expense",
                 date: "2026-10-14",
                 description: "Compra semanal",
                 amount: 23450.75,
                 currency: "ARS",
-                category: "Supermercado",
-                subcategory: "Almacén",
+                category_id: groceries.id,
+                event_id: trip.id,
                 payment_method: "credit_card",
                 credit_card: "mercado_pago",
                 beneficiary: "Coto",
@@ -139,6 +154,7 @@ RSpec.describe MovementsController, type: :request do
 
             response 201, "Movement created" do
                 include_context "with valid token"
+                let(:token) { create :users_token, user: user }
                 schema raw_object_schema(:movement)
 
                 let(:created_movement) { Movement.last }
@@ -157,8 +173,8 @@ RSpec.describe MovementsController, type: :request do
                         description: "Compra semanal",
                         amount: BigDecimal("23450.75"),
                         currency: "ARS",
-                        category: "Supermercado",
-                        subcategory: "Almacén",
+                        category: groceries,
+                        event: trip,
                         payment_method: "credit_card",
                         credit_card: "mercado_pago",
                         beneficiary: "Coto",
@@ -170,6 +186,7 @@ RSpec.describe MovementsController, type: :request do
 
             response 422, "Invalid movement" do
                 include_context "with valid token"
+                let(:token) { create :users_token, user: user }
                 schema error_response_schema
 
                 context "with several invalid fields" do
@@ -199,6 +216,16 @@ RSpec.describe MovementsController, type: :request do
                         send_request
                         expect_error_response("validation_failed", "Validation failed: Description can't be blank",
                             { description: [ "can't be blank" ] })
+                    end
+                end
+
+                context "with a category of another user" do
+                    let(:movement_params) { super().merge(category_id: create(:category).id) }
+
+                    it "responds with the category error" do
+                        send_request
+                        expect_error_response("validation_failed", "Validation failed: Category must belong to the same user",
+                            { category: [ "must belong to the same user" ] })
                     end
                 end
 
@@ -300,7 +327,7 @@ RSpec.describe MovementsController, type: :request do
                         description: "Nueva descripción",
                         amount: BigDecimal("99.9"),
                         shared: true,
-                        category: "Supermercado"
+                        category: movement.category
                     )
                 end
             end
