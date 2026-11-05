@@ -13,6 +13,29 @@
   ],
   "components": {
     "schemas": {
+      "category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ]
+          },
+          "parent_id": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Id of the root category when this is a subcategory"
+          }
+        }
+      },
       "movement": {
         "type": "object",
         "properties": {
@@ -139,6 +162,87 @@
     }
   },
   "paths": {
+    "/categories": {
+      "get": {
+        "summary": "Get categories",
+        "security": [
+          {
+            "token_header": [
+
+            ]
+          }
+        ],
+        "description": "Returns the logged user's categories and subcategories, ordered by name",
+        "tags": [
+          "Categories"
+        ],
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "income",
+                "expense"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/category"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid filter",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/error"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements": {
       "get": {
         "summary": "Get movements",

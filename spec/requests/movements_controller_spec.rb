@@ -59,6 +59,15 @@ RSpec.describe MovementsController, type: :request do
                     end
                 end
 
+                context "filtering by a month without movements" do
+                    let(:month) { "2026-12" }
+
+                    it "responds with an empty collection" do
+                        send_request
+                        expect_collection_response([])
+                    end
+                end
+
                 context "filtering by category" do
                     let(:category_id) { rent.id }
 
