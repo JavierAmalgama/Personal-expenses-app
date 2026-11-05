@@ -1,18 +1,16 @@
 class ApplicationController < ActionController::API
     include RenderingHelpers
-    rescue_from ActiveRecord::RecordInvalid, with: :render_record_invalid_error
-    rescue_from ActiveRecord::RecordNotFound, with: :render_record_not_found_error
-    rescue_from ArgumentError, with: :render_invalid_argument_error
+    include ErrorHandling
     before_action :validate_token
 
     private
 
     def validate_token
         token = request.headers["Authorization"]
-        return head :unauthorized unless token.present?
-            
+        raise UnauthorizedError.new("Authorization header is missing", code: :missing_token) unless token.present?
+
         @logged_user = get_user_from_token(token)
-        return head :forbidden if @logged_user == nil
+        raise UnauthorizedError.new("Token is invalid or expired", code: :invalid_token) if @logged_user.nil?
     end
 
     def get_user_from_token(token)

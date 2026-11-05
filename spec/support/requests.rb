@@ -48,11 +48,11 @@ module Requests
 		{ '$ref': "#/components/schemas/#{model}" }
 	end
 
-	def error_reponse_schema
+	def error_response_schema
 		{
 			type: :object,
-			properties: { errors: { '$ref': '#/components/schemas/error' } },
-			required: [:errors]
+			properties: { error: { '$ref': '#/components/schemas/error' } },
+			required: [:error]
 		}
 	end
 
@@ -60,20 +60,16 @@ module Requests
 		expect_response(collection.map(&:serialize))
 	end
 
-	def expect_head_response(code)
+	def expect_no_content_response
 		expect(response.body.blank?).to eq true
-		expect(response.code.to_i).to eq code
+		expect(response).to have_http_status(:no_content)
 	end
 
-	def expect_error_response(error_name, error_message)
-		expect_response(response: { error_name: error_name, error_message: error_message })
+	def expect_error_response(code, message, details = {})
+		expect_response(error: { code: code, message: message, details: details })
 	end
 
-	def invalid_record_schema
-		object_response_schema :invalid_record_error
-	end
-
-	def invalid_argument_schema
-		object_response_schema :invalid_argument_error
+	def response_error
+		JSON.parse(response.body)["error"]
 	end
 end

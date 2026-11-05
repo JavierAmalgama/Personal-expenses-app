@@ -52,8 +52,10 @@ RSpec.describe Movement, type: :model do
         end
     end
 
-    describe "currency format" do
-        [ "ars", "AR", "ARSS", "" ].each do |bad_currency|
+    describe "currency" do
+        it { is_expected.to validate_inclusion_of(:currency).in_array(Movement::SUPPORTED_CURRENCIES).with_message("must be one of: ARS, USD") }
+
+        [ "ars", "AR", "ARSS", "EUR", "" ].each do |bad_currency|
             context "when currency is '#{bad_currency}'" do
                 it { expect(build :movement, currency: bad_currency).to be_invalid }
             end
