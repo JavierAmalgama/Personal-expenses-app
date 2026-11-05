@@ -4,6 +4,10 @@ RSpec.describe User, type: :model do
     it { is_expected.to validate_presence_of :email }
     it { is_expected.to validate_presence_of :name }
     it { is_expected.to have_many(:tokens).class_name("UsersToken") }
+    it { is_expected.to have_many(:movements).dependent(:destroy) }
+    it { is_expected.to have_many(:categories).dependent(:destroy) }
+    it { is_expected.to have_many(:events).dependent(:destroy) }
+    it { is_expected.to have_one(:setting).class_name("UserSetting").dependent(:destroy) }
 
     describe "db columns" do
         it { is_expected.to have_db_column(:id).of_type(:integer).with_options(null: false) }

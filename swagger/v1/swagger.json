@@ -41,12 +41,22 @@
             "type": "string",
             "example": "ARS"
           },
+          "category_id": {
+            "type": "integer",
+            "nullable": true
+          },
           "category": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Name of the root category (read only)"
           },
           "subcategory": {
             "type": "string",
+            "nullable": true,
+            "description": "Name of the subcategory, if any (read only)"
+          },
+          "event_id": {
+            "type": "integer",
             "nullable": true
           },
           "payment_method": {
@@ -154,12 +164,13 @@
             }
           },
           {
-            "name": "category",
+            "name": "category_id",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string"
-            }
+              "type": "integer"
+            },
+            "description": "Includes the movements of its subcategories"
           },
           {
             "name": "kind",
@@ -320,11 +331,11 @@
                       "USD"
                     ]
                   },
-                  "category": {
-                    "type": "string"
+                  "category_id": {
+                    "type": "integer"
                   },
-                  "subcategory": {
-                    "type": "string"
+                  "event_id": {
+                    "type": "integer"
                   },
                   "payment_method": {
                     "type": "string",
@@ -552,11 +563,11 @@
                       "USD"
                     ]
                   },
-                  "category": {
-                    "type": "string"
+                  "category_id": {
+                    "type": "integer"
                   },
-                  "subcategory": {
-                    "type": "string"
+                  "event_id": {
+                    "type": "integer"
                   },
                   "payment_method": {
                     "type": "string",
