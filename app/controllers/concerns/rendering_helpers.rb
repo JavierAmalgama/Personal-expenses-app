@@ -1,6 +1,7 @@
 module RenderingHelpers
 	def render_response(hash:, status:)
-		render json: hash, adapter: :json, status: status
+		# The hash is already serialized; to_json skips AMS, which can't infer a root key for an empty array.
+		render json: hash.to_json, status: status
 	end
 
 	def render_successful_response(hash)
