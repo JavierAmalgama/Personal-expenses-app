@@ -10,15 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_04_120500) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_05_120200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  # Custom types defined in this database.
+  # Note that some types may not work with other database engines. Be careful if changing database.
+  create_enum "credit_card_brand", ["visa", "amex", "mercado_pago", "other"]
+  create_enum "currency", ["ARS", "USD"]
+  create_enum "movement_kind", ["income", "expense"]
+  create_enum "payment_method", ["cash", "debit_card", "credit_card", "transfer", "other"]
 
   create_table "categories", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "parent_id"
     t.string "name", null: false
-    t.string "kind", null: false
+    t.enum "kind", null: false, enum_type: "movement_kind"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["parent_id"], name: "index_categories_on_parent_id"
@@ -36,13 +43,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_04_120500) do
 
   create_table "movements", force: :cascade do |t|
     t.bigint "user_id", null: false
-    t.string "kind", null: false
+    t.enum "kind", null: false, enum_type: "movement_kind"
     t.date "date", null: false
     t.string "description", null: false
     t.decimal "amount", precision: 12, scale: 2, null: false
-    t.string "currency", default: "ARS", null: false
-    t.string "payment_method"
-    t.string "credit_card"
+    t.enum "currency", default: "ARS", null: false, enum_type: "currency"
+    t.enum "payment_method", enum_type: "payment_method"
+    t.enum "credit_card", enum_type: "credit_card_brand"
     t.string "beneficiary"
     t.text "notes"
     t.boolean "shared", default: false, null: false
@@ -50,16 +57,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_04_120500) do
     t.datetime "updated_at", null: false
     t.bigint "category_id"
     t.bigint "event_id"
+    t.jsonb "offset_data"
     t.index ["category_id"], name: "index_movements_on_category_id"
     t.index ["event_id"], name: "index_movements_on_event_id"
+    t.index ["offset_data"], name: "index_movements_on_offset_data", opclass: :jsonb_path_ops, using: :gin
     t.index ["user_id", "date"], name: "index_movements_on_user_id_and_date"
-    t.index ["user_id"], name: "index_movements_on_user_id"
   end
 
   create_table "user_settings", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.decimal "monthly_budget", precision: 12, scale: 2
-    t.string "budget_currency", default: "ARS", null: false
+    t.enum "budget_currency", default: "ARS", null: false, enum_type: "currency"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_user_settings_on_user_id", unique: true

@@ -50,6 +50,7 @@ class MovementsController < ApplicationController
 
     def movement_params
         params.permit(:kind, :date, :description, :amount, :currency, :category_id,
-            :event_id, :payment_method, :credit_card, :beneficiary, :notes, :shared)
+            :event_id, :payment_method, :credit_card, :beneficiary, :notes, :shared,
+            offset_data: [ :target_type, :target_id, :amount ])
     end
 end

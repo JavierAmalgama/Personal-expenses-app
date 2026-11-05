@@ -13,7 +13,7 @@ RSpec.describe Category, type: :model do
         it { is_expected.to have_db_column(:user_id).of_type(:integer).with_options(null: false) }
         it { is_expected.to have_db_column(:parent_id).of_type(:integer) }
         it { is_expected.to have_db_column(:name).of_type(:string).with_options(null: false) }
-        it { is_expected.to have_db_column(:kind).of_type(:string).with_options(null: false) }
+        it { is_expected.to have_db_column(:kind).of_type(:enum).with_options(null: false) }
     end
 
     describe "kind" do

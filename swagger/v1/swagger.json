@@ -116,6 +116,28 @@
           },
           "shared": {
             "type": "boolean"
+          },
+          "offset_data": {
+            "type": "object",
+            "nullable": true,
+            "description": "Only on income movements: the reimbursement it applies to an expense movement, event or expense category",
+            "properties": {
+              "target_type": {
+                "type": "string",
+                "enum": [
+                  "movement",
+                  "event",
+                  "category"
+                ]
+              },
+              "target_id": {
+                "type": "integer"
+              },
+              "amount": {
+                "type": "string",
+                "example": "5000.00"
+              }
+            }
           }
         }
       },
@@ -468,6 +490,25 @@
                   },
                   "shared": {
                     "type": "boolean"
+                  },
+                  "offset_data": {
+                    "type": "object",
+                    "properties": {
+                      "target_type": {
+                        "type": "string",
+                        "enum": [
+                          "movement",
+                          "event",
+                          "category"
+                        ]
+                      },
+                      "target_id": {
+                        "type": "integer"
+                      },
+                      "amount": {
+                        "type": "number"
+                      }
+                    }
                   }
                 },
                 "required": [
@@ -700,6 +741,25 @@
                   },
                   "shared": {
                     "type": "boolean"
+                  },
+                  "offset_data": {
+                    "type": "object",
+                    "properties": {
+                      "target_type": {
+                        "type": "string",
+                        "enum": [
+                          "movement",
+                          "event",
+                          "category"
+                        ]
+                      },
+                      "target_id": {
+                        "type": "integer"
+                      },
+                      "amount": {
+                        "type": "number"
+                      }
+                    }
                   }
                 }
               }

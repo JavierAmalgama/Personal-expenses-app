@@ -18,7 +18,8 @@ RSpec.describe MovementSerializer do
         credit_card: "amex",
         beneficiary: nil,
         notes: "una nota",
-        shared: false
+        shared: false,
+        offset_data: nil
     } }
     let(:serialized_object) { movement.serialize }
 
