@@ -27,7 +27,17 @@ module Swagger
 				},
 				beneficiary: { type: :string, nullable: true },
 				notes: { type: :string, nullable: true },
-				shared: { type: :boolean }
+				shared: { type: :boolean },
+				offset_data: {
+					type: :object,
+					nullable: true,
+					description: "Only on income movements: the reimbursement it applies to an expense movement, event or expense category",
+					properties: {
+						target_type: { type: :string, enum: [ "movement", "event", "category" ] },
+						target_id: { type: :integer },
+						amount: { type: :string, example: "5000.00" }
+					}
+				}
 			}
 		}
 	end

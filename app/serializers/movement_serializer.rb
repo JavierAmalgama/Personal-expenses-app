@@ -1,6 +1,7 @@
 class MovementSerializer < ActiveModel::Serializer
     attributes :id, :kind, :date, :description, :amount, :currency, :category_id, :category,
-        :subcategory, :event_id, :payment_method, :credit_card, :beneficiary, :notes, :shared
+        :subcategory, :event_id, :payment_method, :credit_card, :beneficiary, :notes, :shared,
+        :offset_data
 
     def amount
         format("%.2f", object.amount)

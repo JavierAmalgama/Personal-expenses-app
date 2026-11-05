@@ -13,7 +13,15 @@ RSpec.describe MovementsController, type: :request do
         credit_card: { type: :string, enum: Movement.credit_cards.keys },
         beneficiary: { type: :string },
         notes: { type: :string },
-        shared: { type: :boolean }
+        shared: { type: :boolean },
+        offset_data: {
+            type: :object,
+            properties: {
+                target_type: { type: :string, enum: Movement::OFFSET_TARGETS.keys },
+                target_id: { type: :integer },
+                amount: { type: :number }
+            }
+        }
     }
 
     path "/movements" do
@@ -191,6 +199,25 @@ RSpec.describe MovementsController, type: :request do
                         shared: true
                     )
                 end
+
+                context "with a reimbursement" do
+                    let(:expense) { create :movement, user: user, amount: 50_000 }
+                    let(:movement_params) { {
+                        kind: "income",
+                        date: "2026-10-20",
+                        description: "Reintegro Coto",
+                        amount: 5000,
+                        offset_data: { target_type: "movement", target_id: expense.id, amount: 5000 }
+                    } }
+
+                    it "stores the offset data" do
+                        send_request
+                        expect(created_movement.offset_data).to eq(
+                            "target_type" => "movement", "target_id" => expense.id, "amount" => "5000.00"
+                        )
+                        expect(JSON.parse(response.body)["offset_data"]["amount"]).to eq "5000.00"
+                    end
+                end
             end
 
             response 422, "Invalid movement" do
@@ -235,6 +262,16 @@ RSpec.describe MovementsController, type: :request do
                         send_request
                         expect_error_response("validation_failed", "Validation failed: Category must belong to the same user",
                             { category: [ "must belong to the same user" ] })
+                    end
+                end
+
+                context "with offset data on an expense" do
+                    let(:movement_params) { super().merge(offset_data: { target_type: "event", target_id: trip.id, amount: 100 }) }
+
+                    it "responds with the offset data error" do
+                        send_request
+                        expect_error_response("validation_failed", "Validation failed: Offset data is only allowed on income movements",
+                            { offset_data: [ "is only allowed on income movements" ] })
                     end
                 end
 
